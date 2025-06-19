@@ -1,0 +1,8 @@
+{# templates/home.html #}
+{% extends "base.html" %}
+
+{% block base_content %}
+<div class="page-container py-10 sm:py-14 lg:py-16 space-y-10 sm:space-y-16">
+    {{ homepage_content.content|safe }}
+</div>
+{% endblock base_content %}

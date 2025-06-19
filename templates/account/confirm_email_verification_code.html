@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load allauth account %}
+{% load widget_tweaks %}
+
+{% block head_title %}{% translate "Email Verification" %}{% endblock head_title %}
+
+{% block base_content %}
+<div class="page-container py-10">
+  <div class="auth-form bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-700 rounded-xl shadow-md">
+
+    <!-- Heading -->
+    <h1 class="page-title text-2xl sm:text-3xl text-center mb-2">
+      {% translate "Enter Email Verification Code" %}
+    </h1>
+
+    <!-- Instructions -->
+    {% setvar email_link %}
+      <a href="mailto:{{ email }}" class="link">{{ email }}</a>
+    {% endsetvar %}
+    <p class="text-sm text-center text-zinc-600 dark:text-zinc-300 mb-6">
+      {% blocktranslate %}We've sent a code to {{ email_link }}. The code expires shortly, so please enter it soon.{% endblocktranslate %}
+    </p>
+
+    <!-- Verification Form -->
+    {% url 'account_email_verification_sent' as action_url %}
+    <form method="post" action="{{ action_url }}" class="space-y-5">
+      {% csrf_token %}
+      {{ redirect_field }}
+
+      {% for field in form %}
+        <div>
+          <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-zinc-700 dark:text-zinc-200 mb-1">
+            {{ field.label }}
+          </label>
+          {% render_field field class+="auth-input" %}
+          {% if field.errors %}
+            <p class="mt-1 text-sm text-red-600 dark:text-red-300">
+              {{ field.errors|join:", " }}
+            </p>
+          {% endif %}
+        </div>
+      {% endfor %}
+
+      <div class="flex flex-col sm:flex-row gap-3 sm:justify-between">
+        <button type="submit" class="auth-button w-full sm:w-auto">
+          {% translate "Confirm" %}
+        </button>
+
+        {% if cancel_url %}
+          <a href="{{ cancel_url }}" class="auth-button-secondary w-full sm:w-auto text-center">
+            {% translate "Cancel" %}
+          </a>
+        {% else %}
+          <button type="submit" form="logout-from-stage" class="auth-button-secondary w-full sm:w-auto">
+            {% translate "Cancel" %}
+          </button>
+        {% endif %}
+      </div>
+    </form>
+
+    <!-- Fallback Logout Form (when cancel_url not provided) -->
+    {% if not cancel_url %}
+      <form id="logout-from-stage" method="post" action="{% url 'account_logout' %}">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{% url 'account_login' %}">
+      </form>
+    {% endif %}
+  </div>
+</div>
+{% endblock base_content %}

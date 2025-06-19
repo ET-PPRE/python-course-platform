@@ -1,0 +1,40 @@
+# Byte‑compiled / cache
+__pycache__/
+*.py[cod]
+*.sqlite3
+
+# Virtual environments
+.venv/
+venv/
+
+# macOS
+.DS_Store
+
+# Environment files (copy .env.example → .env locally, but don’t send into image)
+.env
+
+# Git
+.git/
+.gitignore
+
+# CI / project meta
+.github/
+README.md
+
+# Tests (not needed at runtime)
+tests/
+
+# Editor configs
+.vscode/
+.idea/
+
+# Old Dockerfiles / scripts
+Dockerfile.*
+run.sh
+
+# Node modules & build output (if you keep theme/ in the context)
+theme/src/
+theme/node_modules/
+theme/static/
+
+# Anything else you don't need

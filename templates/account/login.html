@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+{% load allauth account %}
+
+{% block head_title %}- Login{% endblock head_title %}
+
+{% block base_content %}
+{% url 'account_signup' as signup_url %}
+{% url 'account_reset_password' as reset_url %}
+
+<div class="page-container py-10">
+  <div class="auth-form bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-700 rounded-xl shadow-md">
+
+    {# In-card messages (base also shows messages globally; keep this for emphasis) #}
+    {% if messages %}
+      <div class="mb-4 space-y-2">
+        {% for message in messages %}
+          <div role="alert"
+               class="p-3 rounded-md text-sm border
+                      {% if 'error' in message.tags %}
+                        bg-red-50 text-red-800 border-red-300 dark:bg-red-900/30 dark:text-red-200 dark:border-red-800
+                      {% else %}
+                        bg-amber-50 text-amber-900 border-amber-300 dark:bg-amber-900/30 dark:text-amber-200 dark:border-amber-800
+                      {% endif %}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <h1 class="page-title text-2xl sm:text-3xl text-center mb-2">Login</h1>
+
+    <form method="POST" class="space-y-5">
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <div role="alert"
+             class="p-3 text-sm rounded-md border border-red-300 bg-red-50 text-red-800
+                    dark:border-red-800 dark:bg-red-900/30 dark:text-red-200 mb-2">
+          {{ form.non_field_errors }}
+        </div>
+      {% endif %}
+
+      {# Email / username (Allauth uses "login" by default) #}
+      <div>
+        <label for="{{ form.login.id_for_label }}" class="block text-sm font-medium text-zinc-700 dark:text-zinc-200 mb-1">
+          Email
+        </label>
+        {% render_field form.login class+="auth-input" %}
+        {% if form.login.errors %}
+          <p class="mt-1 text-sm text-red-600 dark:text-red-300">{{ form.login.errors|striptags }}</p>
+        {% endif %}
+      </div>
+
+      {# Password #}
+      <div>
+        <label for="{{ form.password.id_for_label }}" class="block text-sm font-medium text-zinc-700 dark:text-zinc-200 mb-1">
+          Password
+        </label>
+        {% render_field form.password class+="auth-input" %}
+        {% if form.password.errors %}
+          <p class="mt-1 text-sm text-red-600 dark:text-red-300">{{ form.password.errors|striptags }}</p>
+        {% endif %}
+      </div>
+
+      {# Remember me #}
+      {% if form.remember %}
+      <div class="flex items-center gap-2">
+        {% render_field form.remember class+="h-4 w-4 rounded border-zinc-300 text-amber-600 focus:ring-amber-500 dark:border-zinc-600" %}
+        <label for="{{ form.remember.id_for_label }}" class="text-sm text-zinc-700 dark:text-zinc-300">
+          {{ form.remember.label }}
+        </label>
+      </div>
+      {% endif %}
+
+      <button type="submit" class="btn-primary-navy w-full">
+        Login
+      </button>
+
+      <p class="text-sm text-center mt-2">
+        <a href="{{ reset_url }}" class="link">Forgot your password?</a>
+      </p>
+    </form>
+  </div>
+</div>
+{% endblock base_content %}

@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block base_content %}
+<div class="page-container py-10">
+  <h1 class="page-title text-4xl md:text-5xl text-center mb-8">
+    All Chapters &amp; Assignments
+  </h1>
+
+  {% if chapters %}
+    <div class="chapters-wrap">
+      {% for chapter in chapters %}
+        {% if chapter.has_exam %}
+        <section class="chapter-card">
+          <!-- Header -->
+          <div class="chapter-card-head">
+            <div class="flex items-start gap-2">
+              <span class="text-2xl leading-none"></span>
+              <h2 class="chapter-title">
+                Assignment: {{ chapter.title }}
+              </h2>
+            </div>
+            {% if chapter.task_count %}
+              <span class="chapter-chip">{{ chapter.task_count }} tasks</span>
+            {% endif %}
+          </div>
+
+          <!-- Progress (provided by the view; defaults handled there) -->
+          <div class="mb-3">
+            {% if chapter.has_unpublished_results %}
+              <div class="h-3 w-full rounded-full bg-gray-200 dark:bg-zinc-800 overflow-hidden">
+              </div>
+            {% else %}
+              <div class="h-3 w-full rounded-full bg-gray-200 dark:bg-zinc-800 overflow-hidden">
+                <div class="h-3 rounded-full bg-green-500 transition-all duration-300"
+                    style="width: {{ chapter.progress|default:0 }}%;"></div>
+              </div>
+              <div class="mt-1 text-sm text-gray-600 dark:text-zinc-400 text-right">
+                {{ chapter.points_achieved|floatformat:0 }} of {{ chapter.points_available|floatformat:0}} points
+              </div>
+            {% endif %}
+          </div>
+
+          <!-- Actions -->
+          <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <a
+              href="{% url 'assignments:chapter-assignments' chapter_slug=chapter.slug %}"
+              class="btn-uol btn-nowrap w-full inline-flex items-center justify-center gap-2"
+              aria-label="View assignments for {{ chapter.title }}"
+            >
+              📄 Assignments ({{ chapter.assignments_filtered|length }})
+            </a>
+          </div>
+        </section>
+        {% else %}
+        <section class="chapter-card">
+          <!-- Header -->
+          <div class="chapter-card-head">
+            <div class="flex items-start gap-2">
+              <span class="text-2xl leading-none"></span>
+              <h2 class="chapter-title">
+                Chapter {{ chapter.order|default:forloop.counter }}: {{ chapter.title }}
+              </h2>
+            </div>
+            {% if chapter.task_count %}
+              <span class="chapter-chip">{{ chapter.task_count }} tasks</span>
+            {% endif %}
+          </div>
+
+          <!-- Progress (provided by the view; defaults handled there) -->
+          <div class="mb-3">
+            <div class="h-3 w-full rounded-full bg-gray-200 dark:bg-zinc-800 overflow-hidden">
+              <div class="h-3 rounded-full bg-green-500 transition-all duration-300"
+                   style="width: {{ chapter.progress|default:0 }}%;"></div>
+            </div>
+            <div class="mt-1 text-sm text-gray-600 dark:text-zinc-400 text-right">
+              {{ chapter.progress|default:0 }}% Complete
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {# Prefer chapter.book_url; else fallback to first assignment if present #}
+            {% if chapter.book_url %}
+              <a
+                href="/book/{{ chapter.book_url }}"
+                class="btn-uol btn-nowrap w-full inline-flex items-center justify-center gap-2"
+                aria-label="Open chapter book for {{ chapter.title }}"
+              >
+                Read Book Chapter
+              </a>
+            {% elif chapter.assignments_filtered and chapter.assignments_filtered.0 %}
+              <a
+                href="{% url 'assignments:assignment-detail' chapter_slug=chapter.slug assignment_slug=chapter.assignments_filtered.0.slug %}"
+                class="btn-uol btn-nowrap w-full inline-flex items-center justify-center gap-2"
+                aria-label="Open first assignment in {{ chapter.title }}"
+              >
+                Read Book Chapter
+              </a>
+            {% else %}
+              <span
+                class="btn-uol btn-nowrap w-full inline-flex items-center justify-center gap-2 opacity-60 cursor-not-allowed pointer-events-none"
+                aria-disabled="true"
+              >
+                Read Book Chapter
+              </span>
+            {% endif %}
+
+            <a
+              href="{% url 'assignments:chapter-assignments' chapter_slug=chapter.slug %}"
+              class="btn-uol btn-nowrap w-full inline-flex items-center justify-center gap-2"
+              aria-label="View assignments for {{ chapter.title }}"
+            >
+              📄 Assignments ({{ chapter.assignments_filtered|length }})
+            </a>
+          </div>
+        </section>
+        {% endif %}
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="card max-w-md mx-auto mt-4">
+      <p class="text-muted italic text-center">No chapters available.</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock base_content %}

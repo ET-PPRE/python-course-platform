@@ -1,0 +1,137 @@
+# This file is a template, and might need editing before it works on your project.
+# This is a sample GitLab CI/CD configuration file that should run without any modifications.
+# It demonstrates a basic 3 stage CI/CD pipeline. Instead of real tests or scripts,
+# it uses echo commands to simulate the pipeline execution.
+#
+# A pipeline is composed of independent jobs that run scripts, grouped into stages.
+# Stages run in sequential order, but jobs within stages run in parallel.
+#
+# For more information, see: https://docs.gitlab.com/ee/ci/yaml/#stages
+#
+# You can copy and paste this template into a new `.gitlab-ci.yml` file.
+# You should not add this template to an existing `.gitlab-ci.yml` file by using the `include:` keyword.
+#
+# To contribute improvements to CI/CD templates, please follow the Development guide at:
+# https://docs.gitlab.com/development/cicd/templates/
+# This specific template is located at:
+# https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/templates/Getting-Started.gitlab-ci.yml
+
+workflow:
+  rules:
+    - if: '$CI_COMMIT_BRANCH'   # Run for all commits on all branches
+
+stages:          # List of stages for jobs, and their order of execution
+  - build
+  - test
+  - deploy
+
+build-job:       # This job runs in the build stage, which runs first.
+  stage: build
+  script:
+    - echo "Compiling the code..."
+    - echo "Compile complete."
+  tags:
+    - django
+
+unit-test-job:   # This job runs in the test stage.
+  stage: test    # It only starts when the job in the build stage completes successfully.
+  before_script:
+    - curl -LsSf https://astral.sh/uv/install.sh | sh
+    - export PATH="$HOME/.local/bin:$PATH"
+    - uv venv .venv
+    - source .venv/bin/activate
+    - uv sync
+  script:
+    - echo "Running unit tests... This will take some time."
+    - cd src
+    - uv run manage.py test --verbosity=2
+  tags:
+    - django
+  artifacts:
+    name: venv
+    paths:
+      - .venv/
+    expire_in: 5m
+
+lint-test-job:   # This job also runs in the test stage.
+  stage: test    # It can run at the same time as unit-test-job (in parallel).
+  needs:
+    - job: unit-test-job
+      artifacts: true    # wait for and download the .venv/ artifact
+  before_script:
+    - source .venv/bin/activate
+  script:
+    - echo "Linting code with Ruff"
+    - uv run ruff check .
+  tags:
+    - django
+  
+deploy-main:
+  stage: deploy
+  before_script:
+    - uv run src/manage.py collectstatic --no-input
+    - uv run src/manage.py migrate --no-input
+  script:
+    - echo "🚀 Deploying to Main server..."
+    - export PODMAN_RUN_OPTS="--replace"
+    - podman-compose -f docker-compose.main.yml down || true
+    - podman container prune -f
+    - podman image prune -a -f --filter "reference!=localhost/python-course-platform-sandbox*"
+    - podman volume prune -f
+    - podman-compose -f docker-compose.main.yml build
+    - podman-compose -f docker-compose.main.yml up -d web-main redis celery-main celery-main-beat
+    - echo "Collecting static files"
+    - podman exec -it python-course-platform-web-main uv run manage.py collectstatic --no-input
+    - echo "Applying migrations inside web-main container..."
+    - podman exec -it python-course-platform-web-main uv run manage.py migrate --no-input
+    - echo "✅ Deployment to Main server complete."
+  environment:
+    name: main
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  tags:
+    - django
+
+deploy-dev:
+  stage: deploy
+  before_script:
+    - uv run src/manage.py collectstatic --no-input
+    - uv run src/manage.py migrate --no-input
+  script:
+    - echo "🚀 Deploying to pre-production server..."
+
+    - export PODMAN_RUN_OPTS="--replace"
+    - podman-compose  -f docker-compose.yml down || true
+    - podman container prune -f
+    - podman image prune -a -f --filter "reference!=localhost/python-course-platform-sandbox*"
+    - podman volume prune -f
+    - podman-compose  -f docker-compose.yml build
+    # - podman-compose build --no-cache
+    
+    - podman-compose -f docker-compose.yml up -d web-dev redis celery-dev celery-dev-beat
+    
+    - echo "📂 Ensuring book mount is shared between containers"
+    - podman exec python-course-platform-web-dev ls -l /var/tmp/book || echo "⚠️ No book files yet"
+    - echo "Collecting static files"
+    - podman exec -it python-course-platform-web-dev uv run manage.py collectstatic --no-input
+    - echo "Applying migrations inside web-prod container..."
+    - podman exec -it python-course-platform-web-dev uv run manage.py migrate --no-input
+    - echo "✅ Deployment to pre-production server complete."
+  environment:
+    name: pre-production
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+  tags:
+    - django
+
+deploy-local:
+  stage: deploy
+  script:
+    - echo "💻 Local or unknown branch — no real deployment."
+    - echo "✅ Skipping actual deploy steps."
+  environment:
+    name: local-development
+  rules:
+    - if: '$CI_COMMIT_REF_PROTECTED == "false"'
+  tags:
+    - django

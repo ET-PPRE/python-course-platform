@@ -1,0 +1,240 @@
+{% extends "base.html" %}
+
+{% block base_content %}
+<div class="page-container py-6">
+  <div class="max-w-3xl mx-auto bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-xl shadow-lg p-4 sm:p-6">
+    <!-- Title -->
+    <h1 class="page-title text-2xl sm:text-3xl mb-4 sm:mb-6 text-balance">
+      <span>Assignment {{ assignment_number }}: {{ assignment.title }}</span>
+    </h1>
+
+    <!-- Description -->
+    <div class="prose dark:prose-invert prose-base sm:prose-lg mb-6 sm:mb-8 max-w-none
+                prose-headings:text-[var(--color-heading)]
+                prose-a:text-[var(--color-link)] hover:prose-a:underline">
+      {{ assignment.description|safe }}
+    </div>
+
+    {% if publish_until %}
+      <div id="deadline-counter"
+          class="mb-4 p-3 rounded-lg border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <div class="font-semibold mt-1 sm:mt-0">
+          Max. Score: <span class="text-sm font-light text-blue-600 dark:text-blue-400">{{ total|floatformat:0 }} points</span>
+        </div>
+        <div class="font-semibold mt-1 sm:mt-0">
+          Deadline: <span class="text-sm font-light text-blue-600 dark:text-blue-400">{{ publish_until|date:"Y-m-d H:i" }}</span>
+        </div>
+        <div class="font-semibold mt-1 sm:mt-0">
+          Time remaining: <span id="countdown" class="ml-1 text-sm font-light font-mono inline-block w-20 text-right">--:--:--</span>
+        </div>
+      </div>
+
+      <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const countdownEl = document.getElementById("countdown");
+            const deadline = new Date("{{ publish_until|date:'c' }}").getTime();
+            let timer; // declare first
+
+            function updateCountdown() {
+                const now = new Date().getTime();
+                const diff = deadline - now;
+
+                if (diff <= 0) {
+                    countdownEl.textContent = "Deadline passed";
+                    countdownEl.classList.remove("text-blue-600", "dark:text-blue-400");
+                    countdownEl.classList.add("text-red-600", "dark:text-red-400");
+                    clearInterval(timer);
+                    return;
+                }
+
+                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+                const minutes = Math.floor((diff / (1000 * 60)) % 60);
+                const seconds = Math.floor((diff / 1000) % 60);
+
+                let dayPart = days > 0 ? `${days}d ` : "";
+
+                countdownEl.textContent =
+                  `${dayPart}${hours.toString().padStart(2, '0')}:` +
+                  `${minutes.toString().padStart(2, '0')}:` +
+                  `${seconds.toString().padStart(2, '0')}`;
+
+                // Turn red 5 minutes before deadline (5 * 60 * 1000 ms)
+                if (diff <= 5 * 60 * 1000) {
+                    countdownEl.classList.remove("text-blue-600", "dark:text-blue-400");
+                    countdownEl.classList.add("text-red-600", "dark:text-red-400");
+                } else {
+                    countdownEl.classList.remove("text-red-600", "dark:text-red-400");
+                    countdownEl.classList.add("text-blue-600", "dark:text-blue-400");
+                }
+            }
+
+            updateCountdown();          // run immediately
+            timer = setInterval(updateCountdown, 1000); // then start interval
+        });
+      </script>
+    {% else %}
+      <div class="mb-4 p-3 rounded-lg border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <div class="font-semibold mt-1 sm:mt-0">
+          Max. Score: <span class="text-sm font-light text-blue-600 dark:text-blue-400">{{ total|floatformat:0 }} points</span>
+        </div>
+        <div class="font-semibold mt-1 sm:mt-0">
+          Deadline: <span class="text-sm font-light text-blue-600 dark:text-blue-400">No submission deadline for this assignment.</span>
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- Solution Form -->
+
+    <form method="post" class="space-y-4">
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <p class="text-red-600 text-sm">{{ form.non_field_errors }}</p>
+      {% endif %}
+
+      <div>
+        <label for="id_answer_script" 
+          class="block text-lg sm:text-xl font-semibold mb-4 sm:mb-4 text-gray-800 dark:text-zinc-100">
+          {{ form.answer_script.label }}
+        </label>
+
+        <!-- CodeMirror mount -->
+        <div class="overflow-hidden rounded-lg border border-gray-200 dark:border-zinc-700">
+          <textarea id="id_answer_script" name="answer_script" class="hidden">{{ form.answer_script.value|default_if_none:""}}</textarea>
+        </div>
+
+        {% if form.answer_script.errors %}
+          <p class="text-red-600 text-sm mt-1">{{ form.answer_script.errors }}</p>
+        {% endif %}
+      </div>
+
+      {% if submission_open %}
+        <button type="submit"
+                class="btn-primary-navy w-full sm:w-auto">
+          Submit
+        </button>
+      {% else %}
+        <button type="button"
+                class="btn-primary-navy bg-gray-200 text-gray-800 w-full sm:w-auto">
+          Submission Closed
+        </button>
+        {% if not submission and is_exam %}
+          <p class="text-sm text-red-600 mt-2">The deadline for submitting this assignment has passed. You have not submitted a solution for this assignment.</p>
+        {% endif %}
+      {% endif %}
+    </form>
+
+    <!-- Run Results (HTMX polling) -->
+    {% if submission and submission.task_id %}
+      <div
+        id="run-results"
+        hx-get="{% url 'grader:submission-status' submission.id %}"
+        hx-trigger="load, every 2s"
+        hx-swap="innerHTML"
+        class="mt-6 sm:mt-8"
+        aria-live="polite"
+      >
+        <div class="flex items-center gap-2 text-blue-600 dark:text-blue-400">
+          <svg class="w-5 h-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a 8 8 0 018-8v8H4z"></path>
+          </svg>
+          <em>Waiting for run results…</em>
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- Bottom Navigation -->
+    <div class="mt-8 pt-6 border-t border-gray-200 dark:border-zinc-700">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <!-- Left: Prev + Back -->
+        <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+          {% if prev_assignment %}
+            <a href="{% url 'assignments:assignment-detail' chapter_slug=prev_assignment.chapter.slug assignment_slug=prev_assignment.slug %}"
+               class="btn-uol btn-nowrap w-full sm:w-auto inline-flex items-center justify-center"
+               aria-label="Previous assignment: {{ prev_assignment.title }}">
+              ← Previous: {{ prev_assignment.title }}
+            </a>
+          {% elif prev_assignment_global %}
+            <a href="{% url 'assignments:assignment-detail' chapter_slug=prev_assignment_global.chapter.slug assignment_slug=prev_assignment_global.slug %}"
+               class="btn-uol btn-nowrap w-full sm:w-auto inline-flex items-center justify-center"
+               aria-label="Previous assignment ({{ prev_assignment_global.chapter.title }}): {{ prev_assignment_global.title }}">
+              ← Previous ({{ prev_assignment_global.chapter.title }}): {{ prev_assignment_global.title }}
+            </a>
+          {% endif %}
+
+          {% if not prev_assignment %}
+            <a href="{% url 'assignments:chapter-list' %}"
+               class="btn-uol btn-nowrap w-full sm:w-auto inline-flex items-center justify-center"
+               aria-label="Back to chapter list">
+              ⟵ Back to Chapter List
+            </a>
+          {% endif %}
+        </div>
+
+        <!-- Right: Next -->
+        <div class="flex flex-col sm:flex-row gap-3">
+          {% if next_assignment %}
+            <a href="{% url 'assignments:assignment-detail' chapter_slug=next_assignment.chapter.slug assignment_slug=next_assignment.slug %}"
+               class="btn-uol btn-nowrap w-full sm:w-auto inline-flex items-center justify-center"
+               aria-label="Next assignment: {{ next_assignment.title }}">
+              Next: {{ next_assignment.title }} →
+            </a>
+          {% elif next_assignment_global %}
+            <a href="{% url 'assignments:assignment-detail' chapter_slug=next_assignment_global.chapter.slug assignment_slug=next_assignment_global.slug %}"
+               class="btn-uol btn-nowrap w-full sm:w-auto inline-flex items-center justify-center"
+               aria-label="Next assignment ({{ next_assignment_global.chapter.title }}): {{ next_assignment_global.title }}">
+              Next ({{ next_assignment_global.chapter.title }}): {{ next_assignment_global.title }} →
+            </a>
+          {% else %}
+            <a href="{% url 'assignments:chapter-list' %}"
+               class="btn-uol btn-nowrap w-full sm:w-auto inline-flex items-center justify-center"
+               aria-label="Go to chapter list">
+              Next Chapter →
+            </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CodeMirror Setup -->
+<style>
+  .CodeMirror { max-height: 60vh; }
+  @media (min-width: 640px) { .CodeMirror { max-height: 70vh; } }
+
+  @media (prefers-color-scheme: dark) {
+    .CodeMirror { background-color: #0a0a0a; color: #e5e7eb; }
+    .cm-s-default .CodeMirror-gutters { background-color: #0f0f0f; border-right: 1px solid #3f3f46; }
+    .CodeMirror-gutters { background-color: #0f0f0f; }
+    .CodeMirror-linenumber { color: #a1a1aa; }
+    .CodeMirror-cursor { border-left: 1px solid #e5e7eb; }
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    var textarea = document.getElementById('id_answer_script');
+    if (!textarea) return;
+
+    var editor = CodeMirror.fromTextArea(textarea, {
+      mode: "python",
+      lineNumbers: true,
+      indentUnit: 4,
+      tabSize: 4,
+      matchBrackets: true,
+      autofocus: true,
+      lineWrapping: true,
+      viewportMargin: Infinity,
+      extraKeys: { "Tab": "indentMore", "Shift-Tab": "indentLess" },
+      readOnly: {{ submission_open|yesno:"false,true" }},
+    });
+
+    if (textarea.form) {
+      textarea.form.addEventListener('submit', function () { editor.save(); });
+    }
+  });
+</script>
+{% endblock base_content %}

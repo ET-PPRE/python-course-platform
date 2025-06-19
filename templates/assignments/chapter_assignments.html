@@ -1,0 +1,74 @@
+{# templates/assignments/chapter_assignments.html #}
+{% extends "base.html" %}
+{% load dict_extras %}
+
+{% block base_content %}
+<div class="page-container py-8">
+  <!-- UOL-style heading (uses --color-heading) -->
+   {% if chapter.has_exam %}
+      <h1 class="page-title text-3xl md:text-4xl mb-6 text-balance">
+        Graded Assignment: {{ chapter.title }}
+      </h1>
+    {% else %}
+      <h1 class="page-title text-3xl md:text-4xl mb-6 text-balance">
+        Chapter {{ chapter.order|default:"" }}{% if chapter.order %}:{% endif %} {{ chapter.title }}
+      </h1>
+    {% endif %}
+
+  {% if assignments %}
+    <!-- Responsive grid: 1 / 2 / 3 columns via .cards-container (from input.css) -->
+    <div class="cards-container">
+      {% for a in assignments %}
+
+        {% with progress=a.completion|default:0 %}
+        <section class="exercise-card">
+          <!-- Title -->
+          <div class="exercise-card-title text-balance">
+            📄 Assignment {{ a.order|default:forloop.counter }}: <br>    {{ a.title }}
+          </div>
+          <!-- Progress (grade-driven if available; else uses completion) -->
+          <div>
+            {% with score=user_scores|get_item:a.id %}
+              {% if score and score.grade_total and a.show_output %}
+                {% widthratio score.grade_score score.grade_total 100 as pct %}
+                <div class="exercise-card-progress"
+                     role="progressbar"
+                     aria-valuemin="0" aria-valuemax="100"
+                     aria-valuenow="{{ pct }}">
+                  <div class="exercise-card-progress-bar" style="width: {{ pct }}%"></div>
+                </div>
+                <p class="exercise-card-progress-text">
+                  Score {{ score.grade_score|floatformat:0 }} of {{ score.grade_total|floatformat:0 }} points
+                </p>
+              {% else %}
+                <div class="exercise-card-progress"
+                     role="progressbar"
+                     aria-valuemin="0" aria-valuemax="100"
+                     aria-valuenow="{{ progress }}">
+                  <div class="exercise-card-progress-bar" style="width: {{ progress }}%"></div>
+                </div>
+              {% endif %}
+            {% endwith %}
+          </div>
+
+          <!-- CTA -->
+          <div class="exercise-card-buttons">
+            <a
+              href="{% url 'assignments:assignment-detail' chapter_slug=chapter.slug assignment_slug=a.slug %}"
+              class="btn-uol w-full sm:w-auto inline-flex items-center justify-center"
+              aria-label="Open assignment {{ a.title }}"
+            >
+              Open Assignment
+            </a>
+          </div>
+        </section>
+        {% endwith %}
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="card max-w-md mx-auto mt-8">
+      <p class="text-muted italic text-center">No assignments found.</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock base_content %}

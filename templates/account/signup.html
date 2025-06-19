@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% load allauth %}
+{% load widget_tweaks %}
+
+{% block head_title %}- Register{% endblock head_title %}
+
+{% block base_content %}
+<div class="page-container py-10">
+  <!-- Auth card -->
+  <div class="auth-form bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-700 rounded-xl shadow-md">
+
+    <!-- Title + switch link -->
+    <h1 class="page-title text-2xl sm:text-3xl text-center mb-2">Create your account</h1>
+    <p class="text-sm text-center text-zinc-600 dark:text-zinc-300 mb-6">
+      Already have an account?
+      <a href="{% url 'account_login' %}" class="link font-semibold">Login instead</a>
+    </p>
+
+    <form method="POST" class="space-y-5">
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <div role="alert" class="p-3 text-sm rounded-md border border-red-300 bg-red-50 text-red-800
+                                 dark:border-red-800 dark:bg-red-900/30 dark:text-red-200">
+          {{ form.non_field_errors }}
+        </div>
+      {% endif %}
+
+      <!-- Email -->
+      <div>
+        <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium text-zinc-700 dark:text-zinc-200 mb-1">
+          Email
+        </label>
+        {% render_field form.email class+="auth-input" %}
+      </div>
+
+      <!-- Password -->
+      <div>
+        <label for="{{ form.password1.id_for_label }}" class="block text-sm font-medium text-zinc-700 dark:text-zinc-200 mb-1">
+          Password
+        </label>
+        {% if form.password1.errors %}
+          <div class="text-sm text-red-600 dark:text-red-300 mb-1">{{ form.password1.errors }}</div>
+        {% endif %}
+        {% render_field form.password1 class+="auth-input" %}
+
+        <details class="text-sm mt-2 rounded-md border border-zinc-200 dark:border-zinc-700
+                        bg-zinc-50 dark:bg-zinc-900/40 text-zinc-600 dark:text-zinc-300">
+          <summary class="cursor-pointer px-2 py-1 font-medium">Password requirements</summary>
+          <div class="px-2 py-1">
+            {{ form.password1.help_text|safe }}
+          </div>
+        </details>
+      </div>
+
+      <!-- Confirm Password -->
+      <div>
+        <label for="{{ form.password2.id_for_label }}" class="block text-sm font-medium text-zinc-700 dark:text-zinc-200 mb-1">
+          Confirm Password
+        </label>
+        {% if form.password2.errors %}
+          <div class="text-sm text-red-600 dark:text-red-300 mb-1">{{ form.password2.errors }}</div>
+        {% endif %}
+        {% render_field form.password2 class+="auth-input" %}
+      </div>
+
+      <!-- Submit -->
+      <button type="submit" class="auth-button w-full">
+        Create your account
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock base_content %}

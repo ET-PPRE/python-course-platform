@@ -1,0 +1,286 @@
+/* tailwindcss/input.css */
+@import "tailwindcss";
+
+/* ---------------------------------------
+   THEME TOKENS
+-----------------------------------------*/
+@theme {
+  --color-signal: #94C11C;  /* UOL green */
+  --color-link:   #00408b;  /* UOL deep blue */
+  --color-heading:#1a1a1a;  /* neutral heading */
+  --color-text:   #1f2937;
+  --color-bg:     #ffffff;
+
+  /* Breadcrumb (crumb) highlight */
+  --crumb-active-bg: #0e4f79; /* dark marine blue */
+}
+
+/* Fallbacks if @theme isn’t processed */
+:root{
+  --color-signal:#94C11C;
+  --color-link:#00408b;
+  --color-heading:#1a1a1a;
+  --color-text:#1f2937;
+  --color-bg:#ffffff;
+  --crumb-active-bg:#0e4f79;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){ :root{ color-scheme: dark; } }
+
+/* =========================================================
+   COMPONENTS
+   ========================================================= */
+@layer components{
+  /* ---------- Typography ---------- */
+  .page-title{ @apply font-bold tracking-tight; color:var(--color-heading); }
+  .section-title{ @apply font-semibold; color:var(--color-heading); }
+  .prose h1,.prose h2,.prose h3,.prose h4{ color:var(--color-heading); }
+
+  /* Brand wordmark color (navbar left) */
+  .uol-heading { color: var(--color-link); }
+
+  /* Links (UOL blue) */
+  a,.link{ color:var(--color-link); }
+  a:hover,.link:hover{ text-decoration:underline; }
+
+  /* ---------- Generic buttons ---------- */
+  .btn{ @apply font-medium px-4 py-2 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed; }
+  .btn-primary{ @apply bg-amber-600 text-white hover:bg-amber-700 border border-amber-700 focus-visible:ring-amber-500; }
+  .btn-secondary{ @apply bg-slate-200 text-slate-800 hover:bg-slate-300 border border-slate-400 focus-visible:ring-slate-500; }
+  .btn-outline{ @apply bg-white text-slate-800 border border-slate-300 hover:bg-slate-50 focus-visible:ring-slate-400; }
+  .btn-success{ @apply bg-green-100 text-green-800 border border-green-300 hover:bg-green-200; }
+  .btn-danger{ @apply bg-red-100 text-red-800 border border-red-300 hover:bg-red-200; }
+  .btn-info{ @apply bg-blue-100 text-blue-800 border border-blue-300 hover:bg-blue-200; }
+  .btn-nowrap{ @apply whitespace-nowrap; }
+
+  /* Brand-solid (green) */
+  .btn-solid{
+    --_c:var(--color-signal); --_t:var(--color-text); --_bg:var(--color-bg);
+    @apply font-semibold py-2 px-4 rounded-xl mt-4 inline-flex items-center justify-center border-2 transition-colors;
+    background-color:var(--_c); color:var(--_t); border-color:var(--_c);
+  }
+  .btn-solid:hover{ background-color:var(--_bg); color:var(--_t); }
+
+  /* ---------- UOL pale-green “tab button” (Assignments, etc.) ---------- */
+  .btn-uol{
+    @apply inline-flex items-center rounded-md px-4 py-2 text-base no-underline transition border;
+    background-color:#ddeab0;         /* pale green */
+    border-color:#b9d06b;              /* soft green border */
+    color:#1c1c1c;
+  }
+  .btn-uol:hover{ background-color:#cfe08a; }
+  .btn-uol:focus-visible{ @apply outline-none ring-2 ring-offset-1; --tw-ring-color:var(--color-signal); }
+  .btn-uol.is-active{ background-color:var(--color-signal); border-color:var(--color-signal); color:#000; }
+
+  /* ---------- Cards ---------- */
+  .card{ @apply bg-white p-4 rounded-md shadow; }
+  .card-legacy{ @apply rounded-lg shadow-md overflow-hidden transition-transform duration-300 ease-in-out p-3 transform; }
+  .card-img{ @apply w-full h-[200px] object-cover border-b border-gray-200; }
+  .card-img-placeholder{ @apply w-full h-[200px] bg-gray-100 flex items-center justify-center text-gray-500 text-sm italic; }
+  .card-title{ @apply text-2xl font-bold my-4 bg-gray-100 rounded-lg; color:var(--color-heading); }
+  .card-description{ @apply text-base text-gray-700 mx-2 mb-5; }
+  .card-buttons{ @apply my-4 mx-5; }
+  .card-hover{ @apply transition-shadow duration-200 hover:shadow-lg; }
+  .card-link{
+    @apply block rounded-md bg-white border border-gray-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 transform
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-1;
+  }
+  .card-accent{ @apply relative bg-white rounded-md shadow; }
+  .card-accent::before{ content:""; @apply absolute inset-x-0 top-0 h-1 rounded-t-md bg-amber-500; }
+  .card-header{ @apply flex items-center justify-between gap-2 mb-3; }
+  .card-heading{ @apply text-xl font-semibold; color:var(--color-heading); }
+  .card-subtitle{ @apply text-sm text-zinc-500; }
+  .card-body{ @apply space-y-3; }
+  .card-footer{ @apply mt-4 pt-3 border-t border-gray-200 flex items-center justify-end gap-2; }
+  .card-amber{ @apply bg-amber-50 border border-amber-200; }
+  .card-slate{ @apply bg-slate-50 border border-slate-200; }
+  .card-neutral{ @apply bg-white border border-gray-200; }
+  .card-compact .card-body{ @apply space-y-2; }
+  .card-compact{ @apply p-3 rounded-md; }
+
+  /* ---------- Chapter cards ---------- */
+  .chapter-card{ @apply bg-white border border-gray-200 rounded-2xl p-5 shadow-sm transition-all duration-200 transform hover:shadow-lg hover:-translate-y-0.5; }
+  .chapter-card-head{ @apply flex items-start justify-between gap-3 mb-4; }
+  .chapter-title{ @apply text-xl md:text-2xl font-semibold flex items-center gap-2; }
+  .chapter-chip{ @apply shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border border-amber-200 bg-amber-50 text-amber-800; }
+  .chapter-actions{ @apply mt-5 flex flex-wrap gap-3; }
+
+  /* ---------- Containers ---------- */
+  .page-container{ @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8; }
+  .cards-profile-container{ @apply grid gap-5 mt-5 mx-5; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); }
+  .cards-container{ @apply grid gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3; }
+
+  /* ---------- Progress ---------- */
+  .progress-ok{ @apply bg-green-500; }
+  .progress-warn{ @apply bg-amber-500; }
+  .progress-bad{ @apply bg-rose-500; }
+  .progress-wrap{ @apply space-y-1; }
+
+  /* ---------- Top navigation (BREADCRUMBS style) ---------- */
+  .topnav{ @apply bg-white; }
+  .topnav-list{ @apply flex flex-wrap items-center gap-2; }
+
+  /* Blue text by default; active/hover = blue chip with white text */
+  .topnav-crumb{
+    @apply inline-flex items-center rounded-sm px-3 py-[6px] text-base no-underline transition;
+    color:var(--color-link);
+    background-color:transparent;
+  }
+  .topnav-crumb:hover{
+    background-color:var(--crumb-active-bg);
+    color:#fff;
+  }
+  .topnav-crumb[aria-current="page"], .topnav-crumb.is-active{
+    background-color:var(--crumb-active-bg);
+    color:#fff;
+  }
+
+  /* (Kept) Old pale-green tabs if you still use them elsewhere */
+  .topnav-tab{
+    @apply inline-flex items-center rounded-md border px-4 py-[10px] text-base no-underline transition;
+    background-color:#ddeab0; border-color:#b9d06b; color:#1c1c1c; line-height:20px;
+  }
+  .topnav-tab:hover{ background-color:#cfe08a; }
+  .topnav-tab[aria-current="page"], .topnav-tab.is-active{ background-color:var(--color-signal); border-color:var(--color-signal); color:#000; }
+
+  /* ---------- Auth ---------- */
+  .auth-form{ @apply w-full max-w-md mx-auto border p-6 text-left; }
+  .auth-input{ @apply w-full px-4 py-2 border rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:border-transparent; }
+  .auth-input:focus-visible{ --tw-ring-color:var(--color-heading); }
+  .auth-button,.auth-button:visited{ @apply inline-flex items-center justify-center font-bold py-2 px-4 rounded-lg transition duration-300 my-1 border-2; }
+  .auth-button{ @apply bg-transparent; background-color:var(--color-signal); border-color:var(--color-signal); color:var(--color-text); }
+  .auth-button:hover{ background-color:var(--color-bg); color:var(--color-text); }
+  .auth-button-secondary,.auth-button-secondary:visited{
+    @apply inline-flex items-center justify-center bg-gray-100 border-2 border-gray-300 hover:bg-transparent text-[var(--color-text)] font-bold py-2 px-4 rounded-lg transition duration-300 my-1;
+  }
+
+  /* Sidebar buttons */
+  .sidebar-button,.sidebar-button:visited{
+    @apply inline-flex items-start justify-start border-2 font-bold py-2 px-4 rounded-lg transition duration-300 my-1;
+    background-color:var(--color-bg); border-color:var(--color-signal); color:var(--color-text);
+  }
+  .sidebar-button:hover{ background-color:var(--color-signal); color:var(--color-text); }
+
+  /* Messages */
+  .message-notification{ @apply right-20 z-50 space-y-8 w-auto; }
+  .message-box{ @apply text-xl bg-white px-4 py-3 rounded-xl shadow-lg relative text-center border-solid border-2; }
+  .message-box button{ @apply absolute top-2 right-3 text-gray-600 text-lg hover:text-gray-900 bg-transparent border-0; }
+  .message-box.success{ @apply border-green-800 bg-green-100 text-green-800; }
+  .message-box.error{ @apply border-red-800 bg-red-100 text-red-800; }
+  .message-box.warning{ @apply border-yellow-800 bg-yellow-100 text-yellow-800; }
+  .message-box.info{ @apply border-blue-800 bg-blue-100 text-blue-800; }
+
+  /* Quiz bits */
+  .quiz-container{ @apply flex justify-center items-center min-h-screen bg-gray-100 px-4; }
+  .quiz-card{ @apply w-full max-w-3xl bg-white p-8 rounded-lg shadow-lg; }
+  .quiz-title{ @apply text-2xl font-bold text-center text-purple-600 mb-6; }
+  .question-card{ @apply bg-gray-50 p-5 rounded-lg shadow-md; }
+  .question-header{ @apply my-3 flex justify-between items-center text-sm text-gray-500; }
+  .question-text{ @apply text-lg font-semibold text-gray-900 mb-4; }
+  .choice-container{ @apply flex items-center bg-white border rounded-lg px-4 py-3 cursor-pointer hover:bg-purple-50 transition; }
+  .choice-text{ @apply text-gray-800; }
+  .textarea-answer{ @apply w-full border border-gray-300 rounded-lg p-3 focus:ring focus:ring-purple-300; }
+
+  /* Progress bar (generic) */
+  .progress{ @apply w-full bg-gray-200 rounded h-4 overflow-hidden relative; }
+  .progress-bar{ @apply h-4 text-white text-xs font-semibold flex items-center justify-center transition-all duration-300; background-color:theme('colors.green.500'); }
+
+  /* Exercise card */
+  .exercise-container{ @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5; }
+  .exercise-card{ @apply bg-white rounded-xl shadow-md p-4 w-full max-w-md flex flex-col justify-between; }
+  .exercise-card-title{ @apply font-semibold text-xl mb-1; color:var(--color-heading); }
+  .exercise-card-subtitle{ @apply text-base text-gray-500; }
+  .exercise-card-body{ @apply text-sm; color:var(--color-text); }
+  .exercise-card-link{ @apply text-indigo-600 hover:underline; }
+  .exercise-card-progress{ @apply w-full bg-gray-200 rounded-full h-4; }
+  .exercise-card-progress-bar{ @apply h-4 rounded-full transition-all duration-300; background-color:theme('colors.green.500'); }
+  .exercise-card-progress-text{ @apply text-right text-sm text-gray-600 mt-1; }
+  .exercise-card-buttons{ @apply flex gap-2 mt-2; }
+  .exercise-card-button,.exercise-card-button:visited{
+    @apply text-sm px-4 py-2 rounded-lg transition border-2 block;
+    background-color:theme('colors.gray.200'); color:var(--color-text); border-color:var(--color-signal);
+  }
+  .exercise-card-button:hover{ background-color:var(--color-signal); color:#fff; }
+
+  /* Width helpers */
+  .card-narrow{ @apply inline-block max-w-md; }
+  .card-narrow-responsive{ @apply w-full md:inline-block md:max-w-md; }
+}
+
+/* =========================================================
+   DARK THEME (MEDIA)
+   ========================================================= */
+@media (prefers-color-scheme: dark){
+  body{ @apply bg-zinc-950 text-zinc-100; }
+
+  .page-title,.section-title,.prose h1,.prose h2,.prose h3,.prose h4{ @apply text-zinc-100; }
+  a,.link{ color:#9ec4f0; }  /* lighter blue for dark */
+  a:hover,.link:hover{ @apply underline; }
+
+  /* Wordmark color in dark */
+  .uol-heading { color: #9ec4f0; }
+
+  /* Make assignment titles readable on dark cards */
+  .exercise-card-title { @apply text-zinc-100; }
+
+  /* Breadcrumbs in dark */
+  .topnav{ @apply bg-zinc-950; }
+  .topnav-crumb{ color:#c9e0ff; }
+  .topnav-crumb:hover,
+  .topnav-crumb[aria-current="page"], .topnav-crumb.is-active{
+    background-color:var(--crumb-active-bg); color:#fff;
+  }
+
+  /* Pale-green tabs become slate with green text/border */
+  .topnav-tab,
+  .btn-uol{
+    background-color:#0f1012;  /* near zinc-950 */
+    border-color:#3f3f46;      /* zinc-700 */
+    color:var(--color-signal);
+  }
+  .topnav-tab:hover, .btn-uol:hover{ background-color:#18181b; }
+  .topnav-tab[aria-current="page"], .topnav-tab.is-active,
+  .btn-uol.is-active{ background-color:var(--color-signal); border-color:var(--color-signal); color:#000; }
+
+  /* Surfaces */
+  .card,.card-neutral,.quiz-card,.chapter-card,.exercise-card,.message-box{
+    @apply bg-zinc-900 border-zinc-700 text-zinc-100;
+  }
+  .card-subtitle,.exercise-card-progress-text{ @apply text-zinc-400; }
+  .card-link{ @apply bg-zinc-900 border-zinc-700; }
+  .card-accent::before{ @apply bg-amber-400; }
+  .choice-container{ @apply bg-zinc-900 border-zinc-700 hover:bg-zinc-800; }
+  .textarea-answer{ @apply border-zinc-700; }
+}
+
+/* =========================================================
+   UTILITIES
+   ========================================================= */
+@layer utilities{
+  .chapter-grid{ display:grid; gap:1.5rem; grid-template-columns:1fr; }
+  @media (min-width:768px){ .chapter-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+  @media (min-width:1280px){ .chapter-grid{ grid-template-columns:repeat(3,minmax(0,1fr)); } }
+
+  .assignment-grid{ display:grid; gap:1.25rem; grid-template-columns:1fr; }
+  @media (min-width:768px){ .assignment-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+
+  .chapter-grid--spacious{ gap:2rem; }
+
+  .chapters-wrap{ display:grid; gap:1.5rem; grid-template-columns:repeat(auto-fit,minmax(340px,1fr)); }
+  @media (min-width:1024px){ .chapters-wrap{ gap:2rem; } }
+
+  @media (prefers-reduced-motion: reduce){
+    .card-legacy,.card-link,.chapter-card,.card-hover,.progress-bar{ transition-duration:.01ms; }
+  }
+}
+
+@layer components {
+  .btn-primary-navy{
+    @apply font-medium px-4 py-2 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1;
+    color:#fff;
+    background-color: var(--crumb-active-bg); /* same dark marine blue */
+    border: 1px solid rgba(0,0,0,.1);
+  }
+  .btn-primary-navy:hover{ filter: brightness(1.06); }
+  .btn-primary-navy:focus-visible{ --tw-ring-color: var(--crumb-active-bg); }
+}

@@ -1,0 +1,64 @@
+[project]
+name = "python-course-platform"
+version = "0.1.0"
+description = "A Django project using Tailwind and related packages"
+authors = [{ name = "Gowtham Mahendran", email = "gowtham.mahendran@uni-oldenburg.de" }]
+requires-python = ">=3.12,<3.13"
+
+dependencies = [
+    "django>=5.1,<5.2",
+    "django-allauth>=65.9.0",
+    "psycopg[binary]>=3.2.9",
+    "django-widget-tweaks==1.5.0",
+    "django-tinymce>=5.0.0",
+    "python-dotenv==1.1.1",
+    "celery[redis]>=5.5.3,<6.0",
+    "gitpython>=3.1.25",
+    "gunicorn>=23.0.0",
+    "whitenoise>=6.9.0",
+    "path>=17.1.1",
+    "PyYAML>=6.0.2",
+    "Markdown>=3.8.2",
+    "jupyter-book>=1.0.4",
+    "django-import-export",
+    "tablib[xlsx]",
+]
+
+[dependency-groups]
+dev = [
+    "django-browser-reload>=1.18.0",
+    "django-debug-toolbar>=5.2.0",
+    "ruff>=0.12.1"
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+exclude = [
+    "**/base.py",
+    "**/dev.py",
+    "**/prod.py",
+    "**/celery.py",
+    "**/celery_settings.py",
+    "**/manage.py",
+    "**/wsgi.py",
+    "**/asgi.py",
+    "**/urls.py",
+    "migrations",
+    ".venv",
+    "env",
+    "__pycache__",
+    "static",
+    "media"
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+ignore = ["E501", "F401"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["src"]
+
+[tool.ruff.lint.per-file-ignores]
+"manage.py" = ["E402"]
+

@@ -1,0 +1,201 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Python Course Platform {% block head_title %}{% endblock head_title %}</title>
+
+  <!-- Prevent flash of uninitialized Alpine content -->
+  <style>[x-cloak]{display:none!important}</style>
+
+  <!-- Tailwind compiled CSS (cache-busted in dev) -->
+  <link href="{% static 'css/output.css' %}?v={% now 'U' %}" rel="stylesheet" />
+
+  <!-- Editors (only keep if you actually use them) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.15/lib/codemirror.min.css">
+
+  {% block extra_head %}{% endblock extra_head %}
+</head>
+
+<body class="bg-white text-zinc-900">
+  {% block body %}
+
+  {% url 'home' as home_url %}
+  {% url 'assignments:chapter-list' as chapters_url %}
+  {% url 'account_login' as login_url %}
+  {% url 'account_signup' as signup_url %}
+
+  <!-- =========================
+       NAVBAR (Breadcrumb-style)
+     ========================= -->
+  <nav x-data="{ open:false }"
+       class="topnav border-b border-zinc-200">
+    <div class="page-container py-4 flex items-center justify-between gap-3">
+      <!-- Brand -->
+      <a href="{{ home_url }}" class="text-2xl font-extrabold hover:opacity-90 transition">
+        {{ site_data.site_name }}
+      </a>
+
+      <!-- Desktop: breadcrumb links -->
+      <div class="hidden md:flex items-center gap-2">
+        <ul class="topnav-list items-center">
+          <li>
+            <a href="{{ home_url }}"
+               class="topnav-crumb"
+               aria-current="{% if request.path == home_url %}page{% else %}false{% endif %}">
+              Welcome
+            </a>
+          </li>
+          <li aria-hidden="true" class="mx-1 text-zinc-400">›</li>
+
+          <li>
+            <a href="{{ chapters_url }}"
+               class="topnav-crumb"
+               aria-current="{% if request.resolver_match and request.resolver_match.namespace == 'assignments' %}page{% else %}false{% endif %}">
+              Assignments
+            </a>
+          </li>
+          <li aria-hidden="true" class="mx-1 text-zinc-400">›</li>
+
+          <li>
+            <a href="/book/index.html"
+               class="topnav-crumb"
+               aria-current="{% if request.path|slice:':5' == '/docs' %}page{% else %}false{% endif %}">
+              Book
+            </a>
+          </li>
+          <li aria-hidden="true" class="mx-1 text-zinc-400">›</li>
+
+          {% if user.is_authenticated %}
+            <li>
+              <form method="POST" action="{% url 'account_logout' %}">
+                {% csrf_token %}
+                <button type="submit"
+                        class="topnav-crumb"
+                        aria-current="false">
+                  Log out
+                </button>
+              </form>
+            </li>
+          {% else %}
+            <li>
+              <a href="{{ login_url }}"
+                 class="topnav-crumb"
+                 aria-current="{% if request.path == login_url %}page{% else %}false{% endif %}">
+                Log in
+              </a>
+            </li>
+          {% endif %}
+        </ul>
+      </div>
+
+      <!-- Mobile menu button -->
+      <button
+        class="md:hidden inline-flex items-center justify-center rounded-md p-2 border border-zinc-300 hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-amber-500"
+        @click="open = !open"
+        :aria-expanded="open.toString()"
+        aria-controls="mobile-menu"
+        aria-label="Toggle navigation"
+        x-cloak
+      >
+        <svg x-show="!open" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
+             viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+        <svg x-show="open" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
+             viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Mobile panel -->
+    <div id="mobile-menu"
+         class="md:hidden border-t border-zinc-200"
+         x-show="open"
+         x-transition.origin.top
+         @keydown.escape.window="open=false"
+         @click.outside="open=false"
+         x-cloak>
+      <div class="px-4 py-3 space-y-2">
+        <a href="{{ home_url }}" class="topnav-crumb block w-fit"
+           aria-current="{% if request.path == home_url %}page{% else %}false{% endif %}">
+          Welcome
+        </a>
+        <a href="{{ chapters_url }}" class="topnav-crumb block w-fit"
+           aria-current="{% if request.resolver_match and request.resolver_match.namespace == 'assignments' %}page{% else %}false{% endif %}">
+          Assignments
+        </a>
+        <a href="/book/index.html" class="topnav-crumb block w-fit"
+           aria-current="{% if request.path|slice:':5' == '/docs' %}page{% else %}false{% endif %}">
+          Book
+        </a>
+
+        {% if user.is_authenticated %}
+          <form method="POST" action="{% url 'account_logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="topnav-crumb block w-fit" aria-current="false">
+              Log out
+            </button>
+          </form>
+        {% else %}
+          <a href="{{ login_url }}" class="topnav-crumb block w-fit"
+             aria-current="{% if request.path == login_url %}page{% else %}false{% endif %}">
+            Log in
+          </a>
+        {% endif %}
+      </div>
+    </div>
+  </nav>
+
+  <!-- =========================
+       MESSAGES
+     ========================= -->
+  {% if messages %}
+  <div class="page-container mt-4">
+    {% for message in messages %}
+      <div class="p-4 mb-2 rounded border border-zinc-200 bg-zinc-50 text-zinc-700 text-sm">
+        {{ message }}
+      </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- =========================
+       MAIN CONTENT
+     ========================= -->
+  <main class="page-container py-6">
+    {% block base_content %}{% endblock base_content %}
+  </main>
+
+  {% endblock body %}
+
+  {% block extra_body %}{% endblock extra_body %}
+  {% block page_js %}{% endblock page_js %}
+
+  <!-- JS (load at end for better paint) -->
+  <script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js"></script>
+  <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+  <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.20/lib/codemirror.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.20/mode/python/python.min.js"></script>
+
+  <!-- MathJax -->
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+
+  <!-- FOOTER -->
+  <footer class="bg-[#07333F] text-white py-4 mt-8">
+    <div class="page-container text-center text-sm sm:text-base font-semibold">
+      © {% now "Y" %} Carl von Ossietzky Universität Oldenburg
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,77 @@
+services:
+  
+  redis:
+    image: docker.io/library/redis:7
+    container_name: redis-main
+    ports:
+      - "6380:6379"
+    restart: unless-stopped
+
+  sandbox:
+    container_name: python-course-platform-sandbox
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: sandbox
+    image: python-course-platform-sandbox:3.12
+    
+  web-main:
+    container_name: python-course-platform-web-main
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: prod
+    ports:
+      - "8081:8000"
+    env_file:
+      - .env.main
+    volumes:
+      - /var/tmp/python_course_repo_main:/app/python_course_repo:z
+
+  celery-main:
+    container_name: python-course-platform-celery-main
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: prod
+    command: ["uv","run","celery", "-A", "project", "worker", "--loglevel=INFO"]
+    working_dir: /app/src
+    env_file:
+      - .env.main
+    user: root
+    environment:
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    depends_on:
+      - redis
+      - web-main
+    privileged: true
+    volumes:
+      - /run/user/981/podman/podman.sock:/var/run/docker.sock
+      - /var/tmp/grader:/grader:Z
+      - /var/tmp/python_course_repo_main:/app/python_course_repo:z
+
+  celery-main-beat:
+    container_name: python-course-platform-celery-beat-main
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: prod
+    privileged: true
+    command:
+      [
+        "uv","run","celery","-A","project","beat","-l","INFO",
+        "--scheduler","celery.beat:PersistentScheduler",
+        "--schedule","/tmp/celerybeat-schedule",
+        "--pidfile","/tmp/celerybeat.pid"
+      ]
+    working_dir: /app/src
+    env_file:
+      - .env.main
+    environment:
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    depends_on: 
+      - redis
+      - web-main
+    volumes:
+      - /run/user/981/podman/podman.sock:/var/run/docker.sock
+      - /var/tmp/grader:/grader

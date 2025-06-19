@@ -1,0 +1,35 @@
+{# templates/account/verification_sent.html (or your current path) #}
+{% extends "base.html" %}
+{% load i18n allauth %}
+
+{% block head_title %}{% trans "Verify Your Email Address" %}{% endblock head_title %}
+
+{% block base_content %}
+<div class="page-container py-10">
+  <div class="max-w-md mx-auto bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-xl shadow-lg p-6 sm:p-8 text-center space-y-6">
+    
+    <!-- Title -->
+    <h1 class="page-title text-2xl sm:text-3xl text-emerald-500">
+      {% trans "Verify Your Email Address" %}
+    </h1>
+
+    <!-- Message -->
+    <p class="text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed">
+      {% blocktrans %}
+        We have sent an email to you for verification. Follow the link provided to finalize the registration process.
+        If you do not see the email in your main inbox, please check your spam folder.
+        Contact support if you do not receive it within a few minutes.
+      {% endblocktrans %}
+    </p>
+
+    <!-- Optional helper link (manage/resend) -->
+    <p class="text-sm">
+      {% url 'account_email' as email_url %}
+      <a href="{{ email_url }}" class="link underline">
+        {% trans "Manage email addresses / resend verification" %}
+      </a>
+    </p>
+
+  </div>
+</div>
+{% endblock base_content %}

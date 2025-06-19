@@ -1,0 +1,16 @@
+node_modules
+__pycache__/
+*.pyc
+.DS_Store
+staticfiles/
+.pytest_cache/
+*.sqlite3
+.venv
+*.egg-info/
+logs/
+.ruff_cache
+celerybeat-schedule
+python_course_repo/
+media/
+.env.main
+.env.dev

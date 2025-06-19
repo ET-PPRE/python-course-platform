@@ -1,0 +1,93 @@
+{# grader/results_partial.html #}
+{# Do NOT extend base.html — this is fetched via HTMX into #run-results #}
+
+<div class="space-y-8">
+  <!-- Program Output -->
+  <section class="card-neutral card-hover rounded-xl border border-gray-200 dark:border-zinc-700 p-4 sm:p-5">
+    <h3 class="text-lg font-semibold text-[var(--color-heading)] dark:text-zinc-100 mb-3">Program Output</h3>
+
+    {% if images %}
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+        {% for img in images %}
+          <figure class="space-y-2">
+            <img src="{{ img.data_uri }}" alt="{{ img.name }}" class="max-w-full rounded-md border border-gray-200 dark:border-zinc-700" />
+            <figcaption class="text-sm text-gray-600 dark:text-zinc-400">{{ img.name }}</figcaption>
+          </figure>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    {% if user_stdout %}
+      <pre class="whitespace-pre-wrap break-words font-mono text-sm bg-slate-50 border border-slate-200 rounded-md p-3 overflow-auto max-h-[50vh] dark:bg-zinc-900 dark:border-zinc-700 dark:text-zinc-200">{{ user_stdout }}</pre>
+    {% else %}
+      <p class="text-sm text-zinc-500 italic">No output.</p>
+    {% endif %}
+
+    {% if user_stderr %}
+      <h4 class="mt-5 text-base font-semibold text-red-700 dark:text-red-400">Errors</h4>
+      <pre class="whitespace-pre-wrap break-words font-mono text-sm bg-red-50 border border-red-200 text-red-800 rounded-md p-3 overflow-auto max-h-[40vh] dark:bg-red-950/30 dark:border-red-900 dark:text-red-300">{{ user_stderr }}</pre>
+    {% endif %}
+
+    {% if user_exit_code != None %}
+      <p class="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
+        <span class="font-medium">Exit code:</span> {{ user_exit_code }}
+      </p>
+    {% endif %}
+  </section>
+
+  <!-- Autograder -->
+  <section class="card-neutral card-hover rounded-xl border border-gray-200 dark:border-zinc-700 p-4 sm:p-5">
+    {% if is_exam %}
+      {% if show_output %}
+        {% if score != None and total != None %}
+          <h3 class="text-lg font-semibold text-[var(--color-heading)] dark:text-zinc-100 mb-3">
+            Autograder Results
+          </h3>
+          <p class="dark:text-zinc-200 mb-3">
+            <span class="font-semibold">Score:</span> {{ score|floatformat:0 }} / {{ total|floatformat:0 }}
+          </p>
+          {% if result_output != None %}
+            <h4 class="mt-5 text-base font-semibold text-[var(--color-heading)] dark:text-zinc-100">Checker Output</h4>
+            <pre class="whitespace-pre-wrap break-words font-mono text-sm bg-slate-50 border border-slate-200 rounded-md p-3 overflow-auto max-h-[40vh] dark:bg-zinc-900 dark:border-zinc-700 dark:text-zinc-200">{{ result_output }}</pre>
+          {% endif %}
+        {% endif %}
+      {% else %}
+        {% if deadline_passed %}
+          <h3 class="text-lg font-semibold text-[var(--color-heading)] dark:text-zinc-100 mb-3">
+            Assignment {{ assignment_number }} has been successfully submitted!
+          </h3>
+          <p class="dark:text-zinc-200">
+            Your code has been submitted for grading. <br>
+            Publication of the result: {{ publish_result_at|date:"Y-m-d H:i" }}
+          </p>
+        {% else %}
+          <h3 class="text-lg font-semibold text-[var(--color-heading)] dark:text-zinc-100 mb-3">
+            Assignment {{ assignment_number }} has been successfully submitted!
+          </h3>
+          <p class="dark:text-zinc-200">
+            Your code has been submitted for grading. <br>
+            You can update your code until the submission deadline.
+          </p>
+        {% endif %}
+      {% endif %}
+    {% else %}
+      <h3 class="text-lg font-semibold text-[var(--color-heading)] dark:text-zinc-100 mb-3">
+        Autograder Results
+      </h3>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {% if score != None and total != None %}
+          <p class="dark:text-zinc-200 mb-3">
+            <span class="font-semibold">Score:</span> {{ score|floatformat:0 }} / {{ total|floatformat:0 }}
+          </p>
+        {% endif %}
+      </div>
+
+      {% if test_output %}
+        <h4 class="mt-5 text-base font-semibold text-[var(--color-heading)] dark:text-zinc-100">Checker Output</h4>
+        <pre class="whitespace-pre-wrap break-words font-mono text-sm bg-slate-50 border border-slate-200 rounded-md p-3 overflow-auto max-h-[40vh] dark:bg-zinc-900 dark:border-zinc-700 dark:text-zinc-200">{{ test_output }}</pre>
+      {% endif %}
+    {% endif %}
+  </section>
+
+</div>

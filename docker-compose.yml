@@ -1,0 +1,129 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: dev                    # use the “dev” stage
+    restart: unless-stopped
+    ports:
+      - "8000:8000"               # localhost:8000
+    env_file:
+      - .env.local                  # bring in DB_URL, DEBUG, etc.
+    volumes:
+      - ./:/app                       # mount your entire project for live‑reload
+    
+    develop:
+      watch:
+        # sync only your code directory (not everything)
+        - action: sync
+          path: .
+          target: /app
+          ignore:
+            - .venv/
+        # rebuild when uv.lock changes
+        - action: rebuild
+          path: ./uv.lock
+
+  redis:
+    image: docker.io/library/redis:7
+    container_name: redis-dev
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  celery:                           # dev services mount your code through volumes for hot-reload
+    build: .
+    command: ["uv","run","celery","-A","project","worker", "--loglevel=INFO"]
+    working_dir: /app/src
+    depends_on:
+      - redis
+      - web
+    volumes:
+      - .:/app
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/tmp/grader:/grader
+    environment:
+      - GRADER_HOST_DIR=/grader
+      - GRADER_BIND_DIR=/var/tmp/grader
+
+  celery-beat:
+    build: .
+    command: [
+      "celery","-A","project","beat","-l","INFO",
+      "--scheduler","celery.beat:PersistentScheduler",
+      "--schedule","/tmp/celerybeat-schedule",
+      "--pidfile","/tmp/celerybeat.pid"
+    ]
+    working_dir: /app/src
+    depends_on: [redis, web]
+    volumes:
+      - .:/app
+
+  sandbox:
+    container_name: python-course-platform-sandbox
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: sandbox
+    image: python-course-platform-sandbox:3.12
+    
+  web-dev:
+    container_name: python-course-platform-web-dev
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: prod                   # lean, static‑collected, gunicorn
+    ports:
+      - "8001:8000"               # localhost:8001
+    env_file:
+      - /etc/website/.env.dev
+    volumes:
+      - /var/tmp/python_course_repo_dev:/app/python_course_repo:z
+
+  celery-dev:                    # Production Celery (no host-mount, uses baked-in venv)
+    container_name: python-course-platform-celery-dev
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: prod
+    command: ["uv","run","celery", "-A", "project", "worker", "--loglevel=INFO"]
+    working_dir: /app/src
+    env_file:
+      - /etc/website/.env.dev
+    user: root
+    environment:
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    depends_on:
+      - redis
+      - web-dev
+    privileged: true
+    volumes:
+      - /run/user/981/podman/podman.sock:/var/run/docker.sock
+      - /var/tmp/grader:/grader:Z
+      - /var/tmp/python_course_repo_dev:/app/python_course_repo:z
+
+  celery-dev-beat:
+    container_name: python-course-platform-celery-beat-dev
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: prod
+    privileged: true
+    command:
+      [
+        "uv","run","celery","-A","project","beat","-l","INFO",
+        "--scheduler","celery.beat:PersistentScheduler",
+        "--schedule","/tmp/celerybeat-schedule",
+        "--pidfile","/tmp/celerybeat.pid"
+      ]
+    working_dir: /app/src
+    env_file:
+      - /etc/website/.env.dev
+    environment:
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    depends_on: 
+      - redis
+      - web-dev
+    volumes:
+      - /run/user/981/podman/podman.sock:/var/run/docker.sock
+      - /var/tmp/grader:/grader
