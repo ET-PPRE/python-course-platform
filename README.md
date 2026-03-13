@@ -21,8 +21,6 @@ A Django-based self-learning platform with integrated autograding for Python ass
 python-course-platform/
 ├── .dockerignore
 ├── .env.local                  # Environment variables for local server
-├── .env.dev                    # Environment variables for development server
-├── .env.prod                   # Environment variables for production server
 ├── .gitignore
 ├── .gitlab-ci.yml              # pipeline to automate deployment
 ├── docker-compose.main.yml     # Docker containers for the production version of the site
@@ -71,9 +69,13 @@ python-course-platform/
 
 ## 📦 Content Repository
 
-All the platform learning content, assignment descriptions, starter code, solutions, and test scripts are live in a **separate Git repository**. This ensures that the platform code remains universal and can be implemented for different courses. 
+All the platform learning content, assignment descriptions, starter code, solutions, and test scripts are live in a **[
+separate Git repository](https://github.com/ET-PPRE/python-for-data-analysis)**. This ensures that the platform code remains universal and can be implemented for different courses. 
 
-The learning material its structure is available in this **[Git repository](https://github.com/ET-PPRE/python-for-data-analysis)**.
+
+The link to the repository is specified in a separate .env file. For local deployment, use the .env.local file.
+
+The repository is updated automatically every 5 minutes. Therefore, it will take a few minutes after the initial installation for the content to become visible.
 
 ---
 
@@ -282,4 +284,16 @@ Now log in at:
 ```
 http://localhost:8000/admin
 ```
+
+---
+
+## 🤝 Contributors
+
+Thanks to everyone who has contributed to this repository.
+
+Current contributors:
+- Andreas Günther (Maintainer)
+- Gowtham Mahendran (Backend & Frontend)
+- Dinesh Papal (Frontend)
+
 
